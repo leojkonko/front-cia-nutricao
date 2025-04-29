@@ -1,34 +1,84 @@
-# React + TypeScript + Vite
+# Cia da Nutrição - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gerenciamento de produtos nutricionais com reconhecimento de voz avançado usando AssemblyAI.
 
-Currently, two official plugins are available:
+## Recursos Principais
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Cadastro e gerenciamento de produtos
+- Busca por voz com AssemblyAI
+- Consulta de informações via IA
+- Interface responsiva e intuitiva
 
-## Expanding the ESLint configuration
+## Tecnologias Utilizadas
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- React com TypeScript
+- Vite
+- Tailwind CSS
+- AssemblyAI para reconhecimento de fala
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Reconhecimento de Voz com AssemblyAI
+
+O sistema utiliza a API da AssemblyAI para reconhecimento de fala, proporcionando:
+
+- Maior precisão no português brasileiro
+- Melhor reconhecimento de termos técnicos
+- Funcionamento consistente em todos os navegadores
+- Capacidade de processamento de arquivos de áudio
+
+### Configuração da API
+
+Para utilizar a funcionalidade de reconhecimento de voz, é necessário configurar uma chave da API da AssemblyAI:
+
+1. Crie uma conta em [AssemblyAI](https://www.assemblyai.com/)
+2. Obtenha sua chave de API no painel de controle
+3. Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+
+```
+VITE_ASSEMBLY_API_KEY=sua_chave_da_api_aqui
+```
+
+> **Importante**: No Vite, todas as variáveis de ambiente que devem ser expostas no cliente precisam ter o prefixo `VITE_`. 
+> A aplicação buscará pela variável `VITE_ASSEMBLY_API_KEY` no ambiente.
+
+### Scripts de Diagnóstico
+
+O projeto inclui scripts para ajudar a diagnosticar problemas com variáveis de ambiente:
+
+- `check-env-vars.ps1`: Verifica se as variáveis de ambiente estão configuradas corretamente
+- `test-production-env.ps1`: Testa se as variáveis de ambiente estão sendo incluídas na build de produção
+
+1. Obtenha uma chave gratuita em [assemblyai.com](https://www.assemblyai.com/)
+2. Configure a chave no arquivo `.env`:
+   ```
+   ASSEMBLY_API_KEY=sua-chave-api-aqui
+   ```
+
+Para mais informações sobre a implementação, consulte a documentação em:
+- `/docs/AssemblyAI-Setup.md`
+- `/docs/AssemblyAI-Migration.md`
+- `/docs/AssemblyAI-Integration-Report.md`
+
+## Iniciando o Projeto
+
+1. Clone o repositório
+2. Instale as dependências:
+   ```
+   npm install
+   ```
+3. Configure a chave da API da AssemblyAI (opcional, mas necessário para o reconhecimento de voz)
+4. Inicie o servidor de desenvolvimento:
+   ```
+   npm run dev
+   ```
+
+## Estrutura do Projeto
+
+- `/src/components` - Componentes reutilizáveis
+- `/src/pages` - Páginas da aplicação
+- `/src/services` - Serviços para APIs externas
+- `/src/layouts` - Layouts compartilhados
+- `/src/utils` - Funções utilitárias
+- `/docs` - Documentação adicional
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:

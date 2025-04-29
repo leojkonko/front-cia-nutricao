@@ -1,0 +1,106 @@
+// The following patches should be applied manually to fix the "Nenhum áudio capturado para transcrição" error
+
+// 1. First, update the MediaRecorder setup in the startRecording function:
+mediaRecorderRef.current = mediaRecorder;
+audioChunksRef.current = [];
+mediaRecorder.ondataavailable = (event) => {
+  if (event.data.size > 0) {
+    audioChunksRef.current.push(event.data);
+    console.log(`Chunk de áudio capturado: ${(event.data.size / 1024).toFixed(2)} KB`);
+  }
+};
+
+// Update the onstop handler to prevent the double requestData error
+mediaRecorder.onstop = () => {
+  // Não chamamos requestData() aqui porque o MediaRecorder já está inativo
+  setTimeout(() => {
+    transcribeAudio();
+  }, 300); // Um atraso maior para garantir que todos os dados foram processados
+};
+
+// Make sure to start with a short timeslice for better chunking
+mediaRecorder.start(100);
+
+// 2. Next, update the stopRecording function:
+const stopRecording = () => {
+  if (mediaRecorderRef.current && isRecording) {
+    // Clear the maximum recording timeout
+    if (maxRecordingTimeoutRef.current) {
+      clearTimeout(maxRecordingTimeoutRef.current);
+      maxRecordingTimeoutRef.current = null;
+    }
+    
+    // Audio feedback
+    const beep = new Audio("data:audio/wav;base64,UklGRnYEAABXQVZFZ...");
+    beep.play().catch(() => {
+      console.log("Não foi possível reproduzir o som de fim");
+    });
+
+    // Important: Update states BEFORE stopping the MediaRecorder
+    setIsRecording(false);
+    setIsTranscribing(true);
+    setTranscribeProgress(0);
+    console.log("Gravação finalizada, iniciando processamento de áudio...");
+    onNotification({
+      type: "success",
+      message: "Processando áudio...",
+    });
+    
+    try {
+      // Only call requestData if the recorder is still in recording state
+      if (mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.requestData();
+      }
+    } catch (error) {
+      console.log("Erro ao solicitar dados finais:", error);
+    }
+
+    // Small delay before stopping to ensure data is captured
+    setTimeout(() => {
+      try {
+        console.log("Parando MediaRecorder...");
+        mediaRecorderRef.current?.stop();
+      } catch (error) {
+        console.error("Erro ao parar o MediaRecorder:", error);
+        // Fall back to direct transcription if stopping fails
+        transcribeAudio();
+      }
+    }, 50);
+  }
+};
+
+// 3. Finally, add error checking for recognition.start() calls:
+// A. For the main audio canplaythrough handler:
+audio.addEventListener("canplaythrough", () => {
+  // Only start recognition if not already started
+  let localRecognitionStarted = false;  
+  if (!localRecognitionStarted) {
+    localRecognitionStarted = true;
+    try {
+      recognition.start();
+      console.log("Reconhecimento iniciado, reproduzindo áudio capturado...");
+    } catch (error) {
+      console.error("Erro ao iniciar reconhecimento:", error);
+    }
+  }
+  
+  // Rest of the handler...
+});
+
+// B. For direct recognition start:
+try {
+  recognition.start();
+} catch (error) {
+  console.error("Erro ao iniciar reconhecimento:", error);
+  completeProgress();
+  setIsTranscribing(false);
+  onNotification({
+    type: "error",
+    message: "Erro ao processar áudio. Tente novamente."
+  });
+}
+
+// These changes will fix the main issues:
+// 1. The recognition.start() errors due to double-starting the recognition
+// 2. The "Nenhum áudio capturado para transcrição" error by ensuring data is properly captured
+// 3. The requestData() InvalidStateError by checking the recorder state before calling it
