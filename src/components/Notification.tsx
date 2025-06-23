@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { FC } from "react";
 
 interface NotificationProps {
   message: string;
@@ -6,7 +6,7 @@ interface NotificationProps {
   onClose: () => void;
 }
 
-const Notification = ({ message, type, onClose }: NotificationProps) => {
+const Notification: FC<NotificationProps> = ({ message, type, onClose }) => {
   return (
     <div
       className={`px-4 py-3 rounded-md ${

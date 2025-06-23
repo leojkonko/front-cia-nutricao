@@ -1,5 +1,4 @@
-// Simple AssemblyAI Transcriber Component without imports
-import React from "react";
+// Simple AssemblyAI Transcriber Component
 
 // Define as propriedades do componente
 interface AudioTranscriberProps {

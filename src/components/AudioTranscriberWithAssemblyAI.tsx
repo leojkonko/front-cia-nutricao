@@ -1,5 +1,4 @@
 // Assembly AI Transcriber Component using environment variable
-import React from "react";
 import AssemblyAITranscriberComponent from "./AssemblyAITranscriberComponent";
 
 // Define as propriedades do componente

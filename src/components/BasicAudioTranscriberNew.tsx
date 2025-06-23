@@ -54,11 +54,6 @@ const SpeechRecognitionAPI: { new (): SpeechRecognition } | null =
   (window as any).webkitSpeechRecognition ||
   null;
 
-// Add a type check helper
-const isSpeechRecognitionSupported = (): boolean => {
-  return SpeechRecognitionAPI !== null;
-};
-
 export function BasicAudioTranscriberNew({
   onTranscription,
   onStatusChange,
