@@ -1,26 +1,22 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   HiSearch,
   HiInformationCircle,
   HiCheckCircle,
   HiExclamation,
-  HiPlusCircle,
 } from "react-icons/hi";
 import Notification from "../components/Notification";
 import LoadingOverlay from "../components/products/LoadingOverlay";
 import { BasicAudioTranscriberNew as BasicAudioTranscriber } from "../components/BasicAudioTranscriberNew";
 
-// URL base da API a partir das variáveis de ambiente
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// URL do webhook para busca de produtos
+const AI_SEARCH_URL = import.meta.env.VITE_AI_SEARCH_URL;
 
 interface AISearchResult {
-  productName: string;
   benefits: string[];
   contraindications: string[];
   origin: string;
   purpose: string;
-  imageUrl: string;
 }
 
 interface NotificationType {
@@ -29,7 +25,6 @@ interface NotificationType {
 }
 
 const AISearchPage = () => {
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<AISearchResult | null>(null);
@@ -62,12 +57,16 @@ const AISearchPage = () => {
     setNotification(null);
 
     try {
-      // Atualizar a URL para a rota correta
-      const response = await fetch(
-        `${API_BASE_URL}/products/ai/info?productName=${encodeURIComponent(
-          query.trim()
-        )}`
-      );
+      // Fazer requisição POST com productName no payload
+      const response = await fetch(AI_SEARCH_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain",
+        },
+        body: JSON.stringify({
+          productName: query.trim(),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Erro na busca: ${response.status}`);
@@ -82,7 +81,7 @@ const AISearchPage = () => {
       }
 
       console.log("Resposta da API:", data);
-      setSearchResult(data.data);
+      setSearchResult(data.message);
       setNotification({
         type: "success",
         message: `Informações encontradas para "${query}"`,
@@ -99,35 +98,6 @@ const AISearchPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Função para criar um novo produto com as informações da IA
-  const handleCreateProduct = () => {
-    if (!searchResult) return;
-
-    // Preparar a descrição baseada nas informações da IA
-    const aiDescription = `${
-      searchResult.purpose
-    }\n\nBenefícios: ${searchResult.benefits.join(
-      ", "
-    )}\n\nContraindicações: ${searchResult.contraindications.join(
-      ", "
-    )}\n\nOrigem: ${searchResult.origin}`;
-
-    // Navegar para a página de criação com as informações preenchidas
-    navigate("/products/create", {
-      state: {
-        prefilledData: {
-          name: searchResult.productName || query, // Usar o nome retornado pela API ou a consulta
-          description: aiDescription,
-          category: "", // Deixar vazio para o usuário selecionar
-          price: "",
-          promotion: "",
-          imageUrl: searchResult.imageUrl || "", // URL da imagem vinda da API
-        },
-        fromAI: true,
-      },
-    });
   };
 
   // Handler para receber o texto transcrito (memoizado para evitar recriações desnecessárias)
@@ -199,7 +169,7 @@ const AISearchPage = () => {
               <li>Possíveis contraindicações</li>
               <li>Origem do produto</li>
               <li>Finalidade e usos recomendados</li>
-            </ul>{" "}
+            </ul>
             <p className="text-sm text-blue-700 mt-2 pt-2 border-t border-blue-100">
               <strong>Dica:</strong> Você pode usar o botão de microfone para
               realizar a busca por voz. Recomendamos testar seu microfone antes
@@ -219,7 +189,7 @@ const AISearchPage = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Digite o nome de um produto (ex: Whey Protein, Creatina, Vitamina C...)"
+                placeholder="Digite o nome de um produto (ex: Whey Protein, Creatina, Chá de Boldo...)"
                 className="flex-grow px-4 py-3 focus:outline-none text-gray-600"
               />
 
@@ -248,36 +218,11 @@ const AISearchPage = () => {
           {/* Resultados da busca */}
           {searchResult && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-green-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <div className="bg-green-50 border-b border-gray-200 px-6 py-4">
                 <h2 className="text-xl font-semibold text-green-800">
-                  Informações sobre {searchResult.productName || query}
+                  Informações sobre {query}
                 </h2>
-                <button
-                  onClick={handleCreateProduct}
-                  className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                >
-                  <HiPlusCircle className="mr-2 h-5 w-5" />
-                  Criar Produto
-                </button>
               </div>
-
-              {/* Exibir a imagem do produto quando disponível */}
-              {searchResult.imageUrl && (
-                <div className="p-6 pb-0 flex justify-center">
-                  <div className="w-full max-w-md overflow-hidden rounded-lg shadow-md">
-                    <img
-                      src={searchResult.imageUrl}
-                      alt={`Imagem de ${searchResult.productName || query}`}
-                      className="w-full h-auto object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "https://via.placeholder.com/400x300?text=Imagem+não+encontrada";
-                        e.currentTarget.alt = "Imagem não disponível";
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
 
               <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Benefícios */}
